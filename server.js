@@ -1,14 +1,45 @@
 const config = require("./config")
-const db = require("./db.js")
-const qs = require("querystring")
 const SpotifyWebApi = require("spotify-web-api-node");
 const polka = require('polka');
 
+var scopes = ['user-read-currently-playing'],
+  redirectUri = 'http://localhost',
+  clientId = config.clientId,
+  state = 'login';
+
 const spotifyApi = new SpotifyWebApi({
+	redirectUri: redirectUri,
 	clientId: config.clientId,
 	clientSecret: config.clientSecret,
 });
-spotifyApi.setAccessToken(db.get("accessToken"))
+
+// Go here and grant permission, than take a look at the URL bar
+// console.log(spotifyApi.createAuthorizeURL(scopes, state));
+
+// The code that's returned as a query parameter to the redirect URI
+// Code only can be used once
+//var code = '';
+
+// Retrieve an access token and a refresh token
+// spotifyApi.authorizationCodeGrant(code).then(
+//   function(data) {
+//     console.log('The token expires in ' + data.body['expires_in']);
+//     console.log('The access token is ' + data.body['access_token']);
+//     console.log('The refresh token is ' + data.body['refresh_token']);
+
+//     // Set the access token on the API object to use it in later calls
+//     spotifyApi.setAccessToken(data.body['access_token']);
+//     spotifyApi.setRefreshToken(data.body['refresh_token']);
+//     process.env.accessToken = data.body['access_token'];
+//     process.env.refreshToken = data.body['refresh_token'];
+//   },
+//   function(err) {
+//     console.log('Something went wrong!', err);
+//   }
+// );
+
+spotifyApi.setAccessToken(process.env.accessToken)
+spotifyApi.setRefreshToken(process.env.refreshToken)
 
 let currentSong = {
 	name: null,
@@ -20,19 +51,26 @@ let currentSong = {
 	update: null,
 }
 
-const getText = (paused, name, artists, url) => `${paused} <a href="${url}">${artists} — ${name}</a>`
+const getText = (name, artists, url) => `<a href="${url}">${artists} — ${name}</a>`
 
 const getMyCurrentPlaybackState = async () => {
 	try {
-		let data = await spotifyApi.getMyCurrentPlaybackState({})
-		if (data.statusCode === 200 || data.statusCode === 204){
+		let data = await spotifyApi.getMyCurrentPlayingTrack({})
+		if (data.statusCode === 200){
 			let body = data.body
 			let artists = body.item.artists.map(artist => artist.name).join(", ")
 			currentSong = {
 					name: body.item.name,
 					artists: artists,
 					url: body.item.external_urls.spotify,
-					paused: data.statusCode === 204,
+          paused: false,
+					ok: true
+				}
+				return currentSong 
+			}
+    else if (data.statusCode === 204){
+			currentSong = {
+          paused: true,
 					ok: true
 				}
 				return currentSong 
@@ -48,9 +86,10 @@ const getMyCurrentPlaybackState = async () => {
 		if (err.statusCode === 401) {
 			try {
 				let data = await spotifyApi.refreshAccessToken()
-				let token = data.body["access_token"]
-				spotifyApi.setAccessToken(token);
-				db.set("accessToken", token)
+				spotifyApi.setAccessToken(data.body['access_token']);
+        spotifyApi.setRefreshToken(data.body['refresh_token']);
+				process.env.accessToken = data.body['access_token'];
+        process.env.refreshToken = data.body['refresh_token'];
 				console.log("The access token has been refreshed!");
 				//retrying
 				return await getMyCurrentPlaybackState()
@@ -75,8 +114,8 @@ const getMyCurrentPlaybackState = async () => {
 const showNowPlaying = async () => {
 	var playbackState = await getMyCurrentPlaybackState();
 	if (playbackState.ok) {
-		var icon = playbackState.paused? '⏸': '🎵'
-		return getText(icon, playbackState.name, playbackState.artists, playbackState.url)
+    if (playbackState.paused) {return 'paused'}
+		return getText(playbackState.name, playbackState.artists, playbackState.url)
 	}
 	else {
 		console.log(playbackState.message)
