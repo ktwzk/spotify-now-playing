@@ -2,6 +2,9 @@ const config = require("./config")
 const SpotifyWebApi = require("spotify-web-api-node");
 const polka = require('polka');
 
+const port = process.env.PORT || 3000;
+
+
 var scopes = ['user-read-currently-playing'],
   redirectUri = 'http://localhost',
   clientId = config.clientId,
@@ -124,12 +127,13 @@ const showNowPlaying = async () => {
 	}
 }
 
+
 polka()
   .get('/', async (req, res) => {
      res.writeHead(200, {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept"});
     res.end(await showNowPlaying());
   })
-  .listen(process.env.PORT, err => {
+  .listen(port, err => {
     if (err) throw err;
     console.log(`> Running`);
   });
