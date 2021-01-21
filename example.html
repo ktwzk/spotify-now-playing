@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>now playing</title>
+  </head>
+  <body>
+    <div class="main">
+      <p><span>now playing: <span id="spotify">fetching...</span></span></p>
+    </div>
+    
+  </body>
+  <script>
+  fetch(
+  'https://spotify-now-playing.glitch.me/'
+  ).then(response => response.text())
+  .then(text => document.getElementById("spotify").innerHTML = text);
+  
+  </script>
+</html>
