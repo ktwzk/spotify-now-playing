@@ -1,4 +1,3 @@
-const config = require("./config")
 const SpotifyWebApi = require("spotify-web-api-node");
 const polka = require('polka');
 
@@ -7,29 +6,33 @@ const port = process.env.PORT || 3000;
 
 var scopes = ['user-read-currently-playing'],
   redirectUri = 'http://localhost',
-  clientId = config.clientId,
-  state = 'login';
+  state = 'now-playing';
+
+// 1. Get Client ID and Client Secret by creating Spotify API App
+// https://developer.spotify.com/dashboard/applications
+// I'll put it on ENV, but you can just change it in code.
 
 const spotifyApi = new SpotifyWebApi({
 	redirectUri: redirectUri,
-	clientId: config.clientId,
-	clientSecret: config.clientSecret,
+	clientId: process.env.CLIENT_ID,
+	clientSecret: process.env.CLIENT_SECRET,
 });
 
-// Go here and grant permission, than take a look at the URL bar
+
+// 2. Uncoment this section, get the link and and grant permission, 
+// than take a look at the URL bar.
 // console.log(spotifyApi.createAuthorizeURL(scopes, state));
 
-// The code that's returned as a query parameter to the redirect URI
-// Code only can be used once
-//var code = '';
-
-// Retrieve an access token and a refresh token
+// 3. Use the code that's returned as a query parameter to the redirect URI.
+// It's one-time code! You need to refresh it in case of something went wrong
+// by link from step 2
+// Retrieve an access token and a refresh token with this part
+// var code = '';
 // spotifyApi.authorizationCodeGrant(code).then(
 //   function(data) {
 //     console.log('The token expires in ' + data.body['expires_in']);
 //     console.log('The access token is ' + data.body['access_token']);
 //     console.log('The refresh token is ' + data.body['refresh_token']);
-
 //     // Set the access token on the API object to use it in later calls
 //     spotifyApi.setAccessToken(data.body['access_token']);
 //     spotifyApi.setRefreshToken(data.body['refresh_token']);
