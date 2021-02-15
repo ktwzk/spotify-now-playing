@@ -20,7 +20,7 @@ const spotifyApi = new SpotifyWebApi({
 
 
 // 2. Uncoment this section, get the link and and grant permission, 
-// than take a look at the URL bar.
+// then take a look at the URL bar.
 // console.log(spotifyApi.createAuthorizeURL(scopes, state));
 
 // 3. Use the code that's returned as a query parameter to the redirect URI.
